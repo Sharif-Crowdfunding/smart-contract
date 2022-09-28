@@ -1,0 +1,161 @@
+{
+	"compiler": {
+		"version": "0.8.17+commit.8df45f5f"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "contractAddress",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "projectStarter",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "projectTitle",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "projectDesc",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "deadline",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "goalAmount",
+						"type": "uint256"
+					}
+				],
+				"name": "ProjectStarted",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "returnAllProjects",
+				"outputs": [
+					{
+						"internalType": "contract Project[]",
+						"name": "",
+						"type": "address[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "tokenName",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "durationInDays",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "tokenNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "pricePerToken",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "maximumTokenSale",
+						"type": "uint256"
+					}
+				],
+				"name": "startProject",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"src/Sharifstarter.sol": "SharifStarter"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/utils/math/SafeMath.sol": {
+			"keccak256": "0x0f633a0223d9a1dcccfcf38a64c9de0874dfcbfac0c6941ccf074d63a2ce0e1e",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://864a40efcffdf408044c332a5aa38ec5618ed7b4eecb8f65faf45671bd6cdc65",
+				"dweb:/ipfs/QmQJquTMtc6fgm5JQzGdsGpA2fqBe3MHWEdt2qzaLySMdN"
+			]
+		},
+		"src/Project.sol": {
+			"keccak256": "0x3589bb4e67d556acdccee9f6c856275c254f8ab7037ac17a24060f994874175f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://49387d6752aae4ed9c56140c1e3a740874e863d23c367e72aa247e2a71df5ba9",
+				"dweb:/ipfs/QmXL3psPKagXkjbnY1ta8DMwSBKxkMm9s3nE7GBEnoDkjG"
+			]
+		},
+		"src/Sharifstarter.sol": {
+			"keccak256": "0xaf07e85dcacf04fc33032524145fdfc0e04727d9d0f02fc8f22e0bc7d6c58cf7",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://98d3c924b8432d8e1a458c2d5e7390a227904c74ad0c2d6fcb4c7dcc2e8e4d59",
+				"dweb:/ipfs/QmdgYVp7Rk7tt8o2cgdr4Vk4FmN68hoJdNS1Hv8RfjBAPe"
+			]
+		}
+	},
+	"version": 1
+}
