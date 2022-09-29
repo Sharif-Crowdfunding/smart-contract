@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-enum State {
+enum AuctionState {
+    Waitting,
     InProgress,
     Canceled,
     Expired,
@@ -11,12 +12,14 @@ enum State {
 contract Auction {
     address payable public beneficiary;
     uint256 public auctionEndTime;
+    uint256 public auctionStartTime;
+    uint256 public amount;
+    uint256 public minimumBid;
 
     // current state of the auction
     address public highestBidder;
     uint256 public highestbid;
-    uint256 public minimumBid;
-    bool ended;
+    AuctionState public state;
 
     mapping(address => uint256) pendingReturns;
 
@@ -25,18 +28,26 @@ contract Auction {
 
     constructor(
         address payable _beneficiary,
-        // uint256 _amount,
+        uint256 _amount,
         uint256 _minimumBid,
         uint256 _biddingTime
     ) {
         beneficiary = _beneficiary;
-        auctionEndTime = block.timestamp + _biddingTime;
+
+        auctionStartTime = block.timestamp + 60 * 60 * 24;
+        auctionEndTime = auctionStartTime + _biddingTime;
+
+        amount = _amount;
         minimumBid = _minimumBid;
+
+        state = AuctionState.Waitting;
     }
 
     function bid() public payable {
         if (block.timestamp > auctionEndTime) revert("ENDED_AUCTION");
+        if (block.timestamp < auctionStartTime) revert("NOT_STARTED_AUCTION");
 
+        if (msg.value >= minimumBid) revert("BID_NOT_ENOUGH");
         if (msg.value <= highestbid) revert("BID_NOT_ENOUGH");
 
         if (highestbid != 0) {
@@ -45,30 +56,30 @@ contract Auction {
 
         highestBidder = msg.sender;
         highestbid = msg.value;
+        auctionEndTime += 15 * 60;
         emit highestBidIncreased(msg.sender, msg.value);
     }
 
-    //widraws bids that were overbid
-
     function withdraw() public payable returns (bool) {
-        uint256 amount = pendingReturns[msg.sender];
-        if (amount > 0) {
+        uint256 payment = pendingReturns[msg.sender];
+        if (payment > 0) {
             pendingReturns[msg.sender] = 0;
         }
 
-        if (!payable(msg.sender).send(amount)) {
-            pendingReturns[msg.sender] = amount;
+        if (!payable(msg.sender).send(payment)) {
+            pendingReturns[msg.sender] = payment;
         }
         return true;
     }
 
-    function auctionEnd() public {
-        if (block.timestamp < auctionEndTime)
-            revert("the auction has not ended yet!");
-        if (ended) revert("the auction is already over!");
+    function endAuction() public returns (bool) {
+        if (state == AuctionState.Waitting)
+            revert("Auction is Not Started yet");
+        if (state != AuctionState.InProgress)
+            revert("Auction is already Finished");
 
-        ended = true;
         emit auctionEnded(highestBidder, highestbid);
         beneficiary.transfer(highestbid);
+        return true;
     }
 }
