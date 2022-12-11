@@ -12,6 +12,7 @@ contract SharifStarter is ERC20 {
     Project[] private projects;
     mapping(string => Project) private symbols;
 
+
     constructor() ERC20("SharifStarter", "SHS") {
         _mint(msg.sender, 10000 * 10**18);
     }
@@ -32,6 +33,9 @@ contract SharifStarter is ERC20 {
         string calldata description,
         uint256 totalSupply
     ) external {
+        require(checkValidInput(sharifstarter,name,symbol,totalSupply),"INVALID_INPUT");
+        require(address(symbols[symbol]) == address(0x0) ,"DUPLICATE");
+
         Project newProject = new Project(
             sharifstarter,
             msg.sender,
@@ -41,6 +45,7 @@ contract SharifStarter is ERC20 {
             totalSupply
         );
         projects.push(newProject);
+        symbols[symbol]=newProject;
         emit ProjectCreated(
             address(newProject),
             msg.sender,
@@ -49,6 +54,13 @@ contract SharifStarter is ERC20 {
             description,
             totalSupply
         );
+    }
+
+    function  checkValidInput(address sharifstarter,string memory name,string memory symbol,uint256 totalSupply) private pure returns (bool){
+        if(address(sharifstarter) != address(0x0) && bytes(name).length > 0 && bytes(symbol).length > 0 && totalSupply>0){
+            return true;
+        }
+        return false;
     }
 
     function getProjects() external view returns (Project[] memory) {
