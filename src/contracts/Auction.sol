@@ -47,8 +47,8 @@ contract Auction {
         if (block.timestamp > auctionEndTime) revert("ENDED_AUCTION");
         if (block.timestamp < auctionStartTime) revert("NOT_STARTED_AUCTION");
 
-        if (msg.value >= minimumBid) revert("BID_NOT_ENOUGH");
-        if (msg.value <= highestbid) revert("BID_NOT_ENOUGH");
+        if (msg.value >= minimumBid) revert("LOW_BID");
+        if (msg.value <= highestbid) revert("LOW_BID");
 
         if (highestbid != 0) {
             pendingReturns[highestBidder] += highestbid;
@@ -73,10 +73,8 @@ contract Auction {
     }
 
     function endAuction() public returns (bool) {
-        if (state == AuctionState.Waitting)
-            revert("Auction is Not Started yet");
-        if (state != AuctionState.InProgress)
-            revert("Auction is already Finished");
+        if (state == AuctionState.Waitting) revert("NOT_STARTED_AUCTION");
+        if (state != AuctionState.InProgress) revert("FINISHED_AUCTION");
 
         emit auctionEnded(highestBidder, highestbid);
         beneficiary.transfer(highestbid);
