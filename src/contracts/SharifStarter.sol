@@ -32,6 +32,12 @@ contract SharifStarter is ERC20 {
         string calldata description,
         uint256 totalSupply
     ) external {
+        require(
+            checkValidInput(sharifstarter, name, symbol, totalSupply),
+            "INVALID_INPUT"
+        );
+        require(address(symbols[symbol]) == address(0x0), "DUPLICATE");
+
         Project newProject = new Project(
             sharifstarter,
             msg.sender,
@@ -41,6 +47,7 @@ contract SharifStarter is ERC20 {
             totalSupply
         );
         projects.push(newProject);
+        symbols[symbol] = newProject;
         emit ProjectCreated(
             address(newProject),
             msg.sender,
@@ -51,8 +58,30 @@ contract SharifStarter is ERC20 {
         );
     }
 
+    function checkValidInput(
+        address sharifstarter,
+        string memory name,
+        string memory symbol,
+        uint256 totalSupply
+    ) private pure returns (bool) {
+        if (
+            address(sharifstarter) != address(0x0) &&
+            bytes(name).length > 0 &&
+            bytes(symbol).length > 0 &&
+            totalSupply > 0
+        ) {
+            return true;
+        }
+        return false;
+    }
+
     function getProjects() external view returns (Project[] memory) {
         return projects;
+    }
+
+    function approveProject(Project project) external returns (bool) {
+        project.approveProject();
+        return true;
     }
 
     function getProjectBySymbol(string memory symbol)

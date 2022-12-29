@@ -17,15 +17,35 @@ contract Auction {
     uint256 public minimumBid;
 
     // current state of the auction
-    address public highestBidder;
-    uint256 public highestbid;
+    struct Bid{
+        address bidder;
+        uint256 bidValue;
+        uint256 amount;
+    }
+    
+    Bid[] private  bidders;
     AuctionState public state;
 
-    mapping(address => uint256) pendingReturns;
+    uint256 public  currentBalance;
 
-    event highestBidIncreased(address bidder, uint256 amount);
+    event bidAdded(address bidder, uint256 amount,uint256 payload);
     event auctionEnded(address winner, uint256 amount);
 
+
+    modifier inState(AuctionState _state) {
+        if (_state == AuctionState.Waitting && block.timestamp > auctionStartTime) state=AuctionState.InProgress;
+        if (_state == AuctionState.InProgress && block.timestamp > auctionEndTime) {
+            
+        }
+        require(state == _state,"Auction is not in correct state");
+        _;
+    }
+
+    modifier checkAuctionTime(){
+        if (block.timestamp > auctionEndTime) revert("ENDED_AUCTION");
+        if (block.timestamp < auctionStartTime) revert("NOT_STARTED_AUCTION");
+        _;
+    }
     constructor(
         address payable _beneficiary,
         uint256 _amount,
@@ -37,49 +57,36 @@ contract Auction {
         auctionStartTime = block.timestamp + 60 * 60 * 24;
         auctionEndTime = auctionStartTime + _biddingTime;
 
+        currentBalance=0;
         amount = _amount;
         minimumBid = _minimumBid;
 
         state = AuctionState.Waitting;
     }
 
-    function bid() public payable {
-        if (block.timestamp > auctionEndTime) revert("ENDED_AUCTION");
-        if (block.timestamp < auctionStartTime) revert("NOT_STARTED_AUCTION");
+    function bid(uint256 payload) inState(AuctionState.InProgress) checkAuctionTime() public payable {
+        if ((msg.value/payload) < minimumBid) revert("LOW_BID");
 
-        if (msg.value >= minimumBid) revert("BID_NOT_ENOUGH");
-        if (msg.value <= highestbid) revert("BID_NOT_ENOUGH");
+        currentBalance += msg.value;
+        bidders.push(Bid(msg.sender,msg.value,payload));
 
-        if (highestbid != 0) {
-            pendingReturns[highestBidder] += highestbid;
-        }
-
-        highestBidder = msg.sender;
-        highestbid = msg.value;
         auctionEndTime += 15 * 60;
-        emit highestBidIncreased(msg.sender, msg.value);
+        emit bidAdded(msg.sender, msg.value,payload);
     }
 
     function withdraw() public payable returns (bool) {
-        uint256 payment = pendingReturns[msg.sender];
-        if (payment > 0) {
-            pendingReturns[msg.sender] = 0;
-        }
 
-        if (!payable(msg.sender).send(payment)) {
-            pendingReturns[msg.sender] = payment;
-        }
         return true;
     }
 
-    function endAuction() public returns (bool) {
-        if (state == AuctionState.Waitting)
-            revert("Auction is Not Started yet");
-        if (state != AuctionState.InProgress)
-            revert("Auction is already Finished");
-
-        emit auctionEnded(highestBidder, highestbid);
-        beneficiary.transfer(highestbid);
+    function start() inState(AuctionState.Waitting) public returns (bool) {
+        if (block.timestamp < auctionStartTime) revert("NOT_STARTED_AUCTION");
+        state = AuctionState.InProgress;
+        return true;
+    }
+     
+    function cancel() inState(AuctionState.Waitting) public returns (bool) {
+        state = AuctionState.InProgress;
         return true;
     }
 }
