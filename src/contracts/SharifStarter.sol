@@ -9,16 +9,18 @@ import "./Project.sol";
 contract SharifStarter is ERC20 {
     using SafeMath for uint256;
 
+    address private owner;
     Project[] private projects;
     mapping(string => Project) private symbols;
 
     constructor() ERC20("SharifStarter", "SHS") {
+        owner = msg.sender;
         _mint(msg.sender, 10000 * 10**18);
     }
 
     event ProjectCreated(
         address contractAddress,
-        address projectStarter,
+        address founder,
         string name,
         string symbol,
         string description,
@@ -26,20 +28,21 @@ contract SharifStarter is ERC20 {
     );
 
     function createProject(
-        address sharifstarter,
+        address manager,
         string calldata name,
         string calldata symbol,
         string calldata description,
         uint256 totalSupply
     ) external {
         require(
-            checkValidInput(sharifstarter, name, symbol, totalSupply),
+            checkValidInput(manager, name, symbol, totalSupply),
             "INVALID_INPUT"
         );
         require(address(symbols[symbol]) == address(0x0), "DUPLICATE");
 
         Project newProject = new Project(
-            sharifstarter,
+            owner,
+            manager,
             msg.sender,
             name,
             symbol,
@@ -59,13 +62,13 @@ contract SharifStarter is ERC20 {
     }
 
     function checkValidInput(
-        address sharifstarter,
+        address manager,
         string memory name,
         string memory symbol,
         uint256 totalSupply
     ) private pure returns (bool) {
         if (
-            address(sharifstarter) != address(0x0) &&
+            address(manager) != address(0x0) &&
             bytes(name).length > 0 &&
             bytes(symbol).length > 0 &&
             totalSupply > 0
@@ -77,11 +80,6 @@ contract SharifStarter is ERC20 {
 
     function getProjects() external view returns (Project[] memory) {
         return projects;
-    }
-
-    function approveProject(Project project) external returns (bool) {
-        project.approveProject();
-        return true;
     }
 
     function getProjectBySymbol(string memory symbol)

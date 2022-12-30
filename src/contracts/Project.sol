@@ -17,22 +17,24 @@ enum DevelopmentStages {
 contract Project is ERC20 {
     using SafeMath for uint256;
 
-    DevelopmentStages public  stage = DevelopmentStages.Inception;
+    DevelopmentStages public stage = DevelopmentStages.Inception;
     ProjectDetails public projectDetails;
 
-    bool public isApprovedForCrowdFund =false; 
-    address[] public shareHolders;
-    address   public tempAddress;
+    address private sharifstarter;
+    address public manager;
+
+    bool public isApprovedForCrowdFund = false;
     Auction[] public auctions;
 
     modifier canCreateAuction() {
-        require(stage != DevelopmentStages.Inception, "STAGE_ERR");
+        require(
+            stage != DevelopmentStages.Inception &&
+                stage != DevelopmentStages.Canceled,
+            "STAGE_ERR"
+        );
         if (stage == DevelopmentStages.Elaboration) {
-            require(isApprovedForCrowdFund,"NOT_APPROVED");
-            require(
-                msg.sender == projectDetails.founder,
-                "O_FOUNDER"
-            );
+            require(isApprovedForCrowdFund, "NOT_APPROVED");
+            require(msg.sender == projectDetails.founder, "O_FOUNDER");
         }
         _;
     }
@@ -42,32 +44,43 @@ contract Project is ERC20 {
         _;
     }
 
+    modifier isManager() {
+        require(msg.sender == manager, "DENIED");
+        _;
+    }
+
+    modifier inStage(DevelopmentStages _stage) {
+        require(stage == _stage, "STAGE_ERR");
+        _;
+    }
+
     constructor(
-        address sharifstarter,
-        address founder,
+        address _sharifstarter,
+        address _manager,
+        address _founder,
         string memory name,
         string memory symbol,
         string memory description,
         uint256 totalSupply
     ) ERC20(name, symbol) {
         projectDetails = ProjectDetails(
-            founder,
+            _founder,
             name,
             symbol,
             description,
             totalSupply
         );
         _mint(
-            sharifstarter,
+            _sharifstarter,
             (projectDetails.totalSupply / 5) * 10**uint256(decimals())
         );
         _mint(
-            founder,
+            _founder,
             ((projectDetails.totalSupply * 4) / 5) * 10**uint256(decimals())
         );
-        shareHolders.push(sharifstarter);
-        shareHolders.push(founder);
-        tempAddress = sharifstarter;
+
+        sharifstarter = _sharifstarter;
+        manager = _manager;
     }
 
     function createAuction(
@@ -83,39 +96,40 @@ contract Project is ERC20 {
             biddingTime
         );
         auctions.push(newAuction);
-        _transfer(msg.sender, tempAddress, amount);
+        _transfer(msg.sender, sharifstarter, amount);
         return true;
     }
 
-    // function endAuction(Auction auction) public returns (bool) {
-    // //         Waitting,
-    // // InProgress,
-    // // Canceled,
-    // // Expired,
-    // // Finished
-    //     require(auction.beneficiary() == payable(msg.sender), "Access Denied");
-        
-    //     return true;
-    // }
-
-    function canelProject() public isFounder() {
+    function canelProject()
+        public
+        isFounder
+        inStage(DevelopmentStages.Inception)
+    {
         stage = DevelopmentStages.Canceled;
     }
 
-    function fundProject() public isFounder() {
+    function fundProject()
+        public
+        isFounder
+        inStage(DevelopmentStages.Inception)
+    {
         stage = DevelopmentStages.Elaboration;
     }
 
-    function releaseProject() public isFounder() {
+    function releaseProject()
+        public
+        isFounder
+        inStage(DevelopmentStages.Elaboration)
+    {
+        require(isApprovedForCrowdFund, "NOT_APPROVED");
         stage = DevelopmentStages.Deployment;
     }
 
-    function approveProject() public   {
-        isApprovedForCrowdFund =true;
+    function approveProject() public isManager {
+        isApprovedForCrowdFund = true;
     }
 
     function getAuctions() public view returns (Auction[] memory) {
         return auctions;
     }
-
 }
