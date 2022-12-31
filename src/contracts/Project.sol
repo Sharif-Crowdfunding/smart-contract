@@ -86,18 +86,32 @@ contract Project is ERC20 {
     function createAuction(
         uint256 biddingTime,
         uint256 amount,
-        uint256 minimumBid
+        uint256 minimumBid,
+        uint256 delayedStartTime
     ) public canCreateAuction returns (bool) {
         require(amount < balanceOf(msg.sender), "INSUFFICIENT_FUND");
         Auction newAuction = new Auction(
             payable(msg.sender),
             amount,
             minimumBid,
-            biddingTime
+            biddingTime,
+            delayedStartTime
         );
         auctions.push(newAuction);
         _transfer(msg.sender, sharifstarter, amount);
         return true;
+    }
+
+    function calcAuctionResult(address _address) public {
+        require(_address != address(0), "INALID_INPUT");
+        Auction _auction = Auction(_address);
+        require(msg.sender == _auction.beneficiary(), "DENIED");
+        _auction.selectWinners();
+        _auction.returnFunds();
+        Bid[] memory bids = _auction.getWinners();
+        for (uint256 i = 0; i < bids.length; i += 1) {
+            _transfer(sharifstarter, bids[i].bidder, bids[i].reqTokenNum);
+        }
     }
 
     function canelProject()
