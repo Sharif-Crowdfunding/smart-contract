@@ -14,7 +14,7 @@ contract SharifStarter is ERC20 {
     mapping(string => Project) private symbols;
 
     constructor() ERC20("SharifStarter", "SHS") {
-        owner = msg.sender;
+        owner=msg.sender;
         _mint(msg.sender, 10000 * 10**18);
     }
 

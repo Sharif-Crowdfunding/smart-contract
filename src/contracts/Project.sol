@@ -70,35 +70,29 @@ contract Project is ERC20 {
             description,
             totalSupply
         );
-        _mint(
-            _sharifstarter,
-            (projectDetails.totalSupply / 5) * 10**uint256(decimals())
-        );
-        _mint(
-            _founder,
-            ((projectDetails.totalSupply * 4) / 5) * 10**uint256(decimals())
-        );
+        _mint(_sharifstarter, (projectDetails.totalSupply / 5));
+        _mint(_founder, ((projectDetails.totalSupply * 4) / 5));
 
         sharifstarter = _sharifstarter;
         manager = _manager;
     }
 
     function createAuction(
-        uint256 biddingTime,
-        uint256 amount,
-        uint256 minimumBid,
-        uint256 delayedStartTime
+        uint256 _saleTokenNum,
+        uint256 _minValPerToken,
+        uint256 _biddingTime,
+        uint256 _delayedStartTime
     ) public canCreateAuction returns (bool) {
-        require(amount < balanceOf(msg.sender), "INSUFFICIENT_FUND");
+        require(_saleTokenNum < balanceOf(msg.sender), "INSUFFICIENT_FUND");
         Auction newAuction = new Auction(
             payable(msg.sender),
-            amount,
-            minimumBid,
-            biddingTime,
-            delayedStartTime
+            _saleTokenNum,
+            _minValPerToken,
+            _biddingTime,
+            _delayedStartTime
         );
         auctions.push(newAuction);
-        _transfer(msg.sender, sharifstarter, amount);
+        _transfer(msg.sender, sharifstarter, _saleTokenNum);
         return true;
     }
 
@@ -106,12 +100,31 @@ contract Project is ERC20 {
         require(_address != address(0), "INALID_INPUT");
         Auction _auction = Auction(_address);
         require(msg.sender == _auction.beneficiary(), "DENIED");
-        _auction.selectWinners();
+
+        bool hasWinner = _auction.selectWinners();
         _auction.returnFunds();
-        Bid[] memory bids = _auction.getWinners();
-        for (uint256 i = 0; i < bids.length; i += 1) {
-            _transfer(sharifstarter, bids[i].bidder, bids[i].reqTokenNum);
+
+        if (hasWinner) {
+            Bid[] memory bids = _auction.getWinners();
+            for (uint256 i = 0; i < bids.length; i += 1) {
+                _transfer(sharifstarter, bids[i].bidder, bids[i].reqTokenNum);
+            }
+        } else {
+            _transfer(
+                sharifstarter,
+                _auction.beneficiary(),
+                _auction.saleTokenNum()
+            );
         }
+    }
+
+    function cancelAuction(address _address) public {
+        require(_address != address(0), "INALID_INPUT");
+        Auction _auction = Auction(_address);
+        require(msg.sender == _auction.beneficiary(), "DENIED");
+
+        _auction.returnFunds();
+        _auction.cancel();
     }
 
     function canelProject()

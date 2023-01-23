@@ -6,7 +6,6 @@ enum AuctionState {
     Waitting,
     InProgress,
     Canceled,
-    Expired,
     Finished
 }
 
@@ -54,8 +53,7 @@ contract Auction {
         if (state == AuctionState.Waitting && block.timestamp > startTime)
             state = AuctionState.InProgress;
         if (state == AuctionState.InProgress && block.timestamp > endTime) {
-            if (bidders.length == 0) state = AuctionState.Expired;
-            else state = AuctionState.Finished;
+            state = AuctionState.Finished;
         }
     }
 
@@ -69,9 +67,15 @@ contract Auction {
             bids[msg.sender] = Bid(msg.sender, msg.value, _payload, false);
         } else revert("DUPLICATE_BIDDER");
 
-        if (endTime - block.timestamp < 15 * 60)
-            endTime = block.timestamp + 15 * 60;
+        if (endTime - block.timestamp < 1 * 60)
+            endTime = block.timestamp + 1 * 60;
         emit bidAdded(msg.sender, msg.value, _payload);
+    }
+
+    function cancelBid() public {
+        require(bids[msg.sender].bidder == address(0), "NO_BID");
+        bids[msg.sender].bidder = address(0);
+        transfer(payable(bids[msg.sender].bidder), bids[msg.sender].totalVal);
     }
 
     function updateBid(uint256 _payload) public payable checkAuctionTime {
@@ -116,7 +120,7 @@ contract Auction {
                 bids[temp.bidder].totalVal = unsold * div;
             }
         }
-        return true;
+        return winners.length > 0;
     }
 
     function getBestPrice() private view returns (Bid memory) {
@@ -133,8 +137,8 @@ contract Auction {
     }
 
     function returnFunds() public {
-        require(winners.length > 0);
-        for (uint256 i = 0; i < bidders.length - 1; i += 1) {
+        // require(state == AuctionState.Finished || state == AuctionState.Canceled,"STAGE_ERR");
+        for (uint256 i = 0; i < bidders.length; i += 1) {
             if (bids[bidders[i]].bidder != address(0)) {
                 transfer(
                     payable(bids[bidders[i]].bidder),
@@ -142,7 +146,9 @@ contract Auction {
                 );
             }
         }
-        withdraw();
+        if (winners.length > 0 && address(this).balance > 0) {
+            withdraw();
+        }
     }
 
     function withdraw() private {
@@ -166,9 +172,8 @@ contract Auction {
     }
 
     function cancel() public returns (bool) {
-        updateState();
-        require(state == AuctionState.Waitting, "STATE_ERR");
-        state = AuctionState.Expired;
+        require(state != AuctionState.Finished, "STATE_ERR");
+        state = AuctionState.Canceled;
         return true;
     }
 
