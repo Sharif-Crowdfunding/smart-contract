@@ -14,8 +14,8 @@ contract SharifStarter is ERC20 {
     mapping(string => Project) private symbols;
 
     constructor() ERC20("SharifStarter", "SHS") {
-        owner=msg.sender;
-        _mint(msg.sender, 10000 * 10**18);
+        owner = msg.sender;
+        _mint(msg.sender, 10000 * 10 ** 18);
     }
 
     event ProjectCreated(
@@ -82,11 +82,9 @@ contract SharifStarter is ERC20 {
         return projects;
     }
 
-    function getProjectBySymbol(string memory symbol)
-        public
-        view
-        returns (Project)
-    {
+    function getProjectBySymbol(
+        string memory symbol
+    ) public view returns (Project) {
         return symbols[symbol];
     }
 }

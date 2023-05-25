@@ -17,6 +17,8 @@ enum DevelopmentStages {
 contract Project is ERC20 {
     using SafeMath for uint256;
 
+    event AuctionCreated(address contractAddress, address creator);
+
     DevelopmentStages public stage = DevelopmentStages.Inception;
     ProjectDetails public projectDetails;
 
@@ -93,6 +95,7 @@ contract Project is ERC20 {
         );
         auctions.push(newAuction);
         _transfer(msg.sender, sharifstarter, _saleTokenNum);
+        emit AuctionCreated(address(newAuction), msg.sender);
         return true;
     }
 

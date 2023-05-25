@@ -92,8 +92,8 @@ contract Auction {
             lastBid.sellAllOrNothing
         );
 
-        if (endTime - block.timestamp < 15 * 60)
-            endTime = block.timestamp + 15 * 60;
+        if (endTime - block.timestamp < 1 * 60)
+            endTime = block.timestamp + 1 * 60;
         emit bidUpdated(msg.sender, msg.value + lastBid.totalVal, _payload);
     }
 
@@ -175,6 +175,16 @@ contract Auction {
         require(state != AuctionState.Finished, "STATE_ERR");
         state = AuctionState.Canceled;
         return true;
+    }
+
+    function getState() public view returns (uint256) {
+        AuctionState _state = state;
+        if (_state == AuctionState.Waitting && block.timestamp > startTime)
+            _state = AuctionState.InProgress;
+        if (_state == AuctionState.InProgress && block.timestamp > endTime) {
+            _state = AuctionState.Finished;
+        }
+        return uint256(_state);
     }
 
     function getTimestamp() public view returns (uint256) {
