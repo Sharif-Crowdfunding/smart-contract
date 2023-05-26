@@ -177,7 +177,7 @@ contract Auction {
         return true;
     }
 
-    function getState() public view returns (uint256) {
+    function getState() public view  returns (uint256){
         AuctionState _state = state;
         if (_state == AuctionState.Waitting && block.timestamp > startTime)
             _state = AuctionState.InProgress;
@@ -186,7 +186,6 @@ contract Auction {
         }
         return uint256(_state);
     }
-
     function getTimestamp() public view returns (uint256) {
         return block.timestamp;
     }

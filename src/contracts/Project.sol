@@ -128,6 +128,12 @@ contract Project is ERC20 {
 
         _auction.returnFunds();
         _auction.cancel();
+
+        _transfer(
+            _auction.beneficiary(),
+            sharifstarter,
+            _auction.saleTokenNum()
+        );
     }
 
     function canelProject()
