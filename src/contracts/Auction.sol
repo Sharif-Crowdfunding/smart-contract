@@ -99,7 +99,7 @@ contract Auction {
 
     function selectWinners() public returns (bool) {
         updateState();
-        require(state == AuctionState.Finished, "STATE_ERR");
+        // require(state == AuctionState.Finished, "STATE_ERR"); //TODO
         require(winners.length == 0);
         uint256 unsoldToken = saleTokenNum;
         for (uint256 i = 0; i < bidders.length - 1; i += 1) {
