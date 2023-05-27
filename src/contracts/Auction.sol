@@ -102,7 +102,7 @@ contract Auction {
         // require(state == AuctionState.Finished, "STATE_ERR"); //TODO
         require(winners.length == 0);
         uint256 unsoldToken = saleTokenNum;
-        for (uint256 i = 0; i < bidders.length - 1; i += 1) {
+        for (uint256 i = 0; i < bidders.length; i += 1) {
             Bid memory temp = getBestPrice();
             if (temp.bidder == address(0) || unsoldToken == 0) break;
 
@@ -125,7 +125,7 @@ contract Auction {
 
     function getBestPrice() private view returns (Bid memory) {
         Bid memory maxBid = Bid(address(0), 0, 1, false);
-        for (uint256 i = 0; i < bidders.length - 1; i += 1) {
+        for (uint256 i = 0; i < bidders.length; i += 1) {
             if (bids[bidders[i]].bidder != address(0)) {
                 if (
                     (bids[bidders[i]].totalVal / bids[bidders[i]].reqTokenNum) >
