@@ -21,7 +21,6 @@ contract Project is ERC20 {
 
     DevelopmentStages public stage = DevelopmentStages.Inception;
     ProjectDetails public projectDetails;
-
     address private sharifstarter;
     address public manager;
 
@@ -103,9 +102,8 @@ contract Project is ERC20 {
         require(_address != address(0), "INALID_INPUT");
         Auction _auction = Auction(_address);
         require(msg.sender == _auction.beneficiary(), "DENIED");
-
-        bool hasWinner = _auction.selectWinners();
-        _auction.returnFunds();
+        require(_auction.state() == AuctionState.Completed, "STATE_ERR");
+        bool hasWinner = _auction.getWinners().length > 0;
 
         if (hasWinner) {
             Bid[] memory bids = _auction.getWinners();
@@ -125,9 +123,7 @@ contract Project is ERC20 {
         require(_address != address(0), "INALID_INPUT");
         Auction _auction = Auction(_address);
         require(msg.sender == _auction.beneficiary(), "DENIED");
-
-        _auction.returnFunds();
-        _auction.cancel();
+        require(_auction.state()==AuctionState.Canceled,"STATE_ERR");
 
         _transfer(
             sharifstarter,

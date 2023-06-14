@@ -6,7 +6,8 @@ enum AuctionState {
     Waitting,
     InProgress,
     Canceled,
-    Finished
+    Finished,
+    Completed
 }
 
 contract Auction {
@@ -73,7 +74,7 @@ contract Auction {
     }
 
     function cancelBid() public {
-        require(bids[msg.sender].bidder == address(0), "NO_BID");
+        require(bids[msg.sender].bidder != address(0), "NO_BID");
         bids[msg.sender].bidder = address(0);
         transfer(payable(bids[msg.sender].bidder), bids[msg.sender].totalVal);
     }
@@ -97,9 +98,7 @@ contract Auction {
         emit bidUpdated(msg.sender, msg.value + lastBid.totalVal, _payload);
     }
 
-    function selectWinners() public returns (bool) {
-        updateState();
-        // require(state == AuctionState.Finished, "STATE_ERR"); //TODO
+    function selectWinners() private returns (bool) {
         require(winners.length == 0);
         uint256 unsoldToken = saleTokenNum;
         for (uint256 i = 0; i < bidders.length; i += 1) {
@@ -136,8 +135,7 @@ contract Auction {
         return maxBid;
     }
 
-    function returnFunds() public {
-        // require(state == AuctionState.Finished || state == AuctionState.Canceled,"STAGE_ERR");
+    function returnFunds() private {
         for (uint256 i = 0; i < bidders.length; i += 1) {
             if (bids[bidders[i]].bidder != address(0)) {
                 transfer(
@@ -149,6 +147,14 @@ contract Auction {
         if (winners.length > 0 && address(this).balance > 0) {
             withdraw();
         }
+    }
+
+    function completeAuction() public {
+        updateState();
+        // require(state == AuctionState.Finished || state == AuctionState.Canceled,"STAGE_ERR");
+        selectWinners();
+        returnFunds();
+        state = AuctionState.Completed;
     }
 
     function withdraw() private {
@@ -173,11 +179,12 @@ contract Auction {
 
     function cancel() public returns (bool) {
         require(state != AuctionState.Finished, "STATE_ERR");
+        returnFunds();
         state = AuctionState.Canceled;
         return true;
     }
 
-    function getState() public view  returns (uint256){
+    function getState() public view returns (uint256) {
         AuctionState _state = state;
         if (_state == AuctionState.Waitting && block.timestamp > startTime)
             _state = AuctionState.InProgress;
@@ -186,6 +193,7 @@ contract Auction {
         }
         return uint256(_state);
     }
+
     function getTimestamp() public view returns (uint256) {
         return block.timestamp;
     }
